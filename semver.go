@@ -173,7 +173,7 @@ func mayParseDigit(s string) (int, bool) {
 	return v, err == nil
 }
 
-func ParseSemVer(semverStr string) (SemVer, error) {
+func Parse(semverStr string) (SemVer, error) {
 	parts := make([]strings.Builder, 5)
 	partIndex := 0
 	didEnterPreReleasePart := false
@@ -184,7 +184,7 @@ func ParseSemVer(semverStr string) (SemVer, error) {
 			continue
 		}
 
-		if c == '-' && !didEnterPreReleasePart {
+		if c == '-' && !didEnterPreReleasePart && !didEnterBuildMetadataPart{
 			didEnterPreReleasePart = true
 			partIndex = 3
 			continue
