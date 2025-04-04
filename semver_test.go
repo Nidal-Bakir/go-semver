@@ -2,6 +2,8 @@ package semver_test
 
 import (
 	"fmt"
+	"math/rand"
+	"slices"
 	"testing"
 
 	"github.com/Nidal-Bakir/go-semver"
@@ -97,6 +99,7 @@ func TestParseSemVerFunction(t *testing.T) {
 		expectedSemver := testData[i].expectedSemver
 		ver, err := semver.Parse(semverStr)
 		a.NoError(err)
+		a.True(semver.IsValid(semverStr))
 		a.Equal(expectedSemver.String(), ver.String())
 		a.Equal(expectedSemver.Major, ver.Major)
 		a.Equal(expectedSemver.Minor, ver.Minor)
@@ -107,10 +110,15 @@ func TestParseSemVerFunction(t *testing.T) {
 		a.True(expectedSemver.IsEquql(ver))
 
 		if i+1 != len(testData) {
-			nextSemver, err := semver.Parse(testData[i+1].semverStr)
+			nextSemverStr := testData[i+1].semverStr
+			nextSemver, err := semver.Parse(nextSemverStr)
 			a.NoError(err)
 			a.True(ver.IsLessOrEquql(nextSemver), fmt.Sprint("(", ver.String(), ") should be less then of equal (", nextSemver.String(), ")"))
 			a.False(ver.IsGrater(nextSemver), fmt.Sprint("(", ver.String(), ") should be less then of equal (", nextSemver.String(), ")"))
+
+			cmpResult, err := semver.Compare(semverStr, nextSemverStr)
+			a.NoError(err)
+			a.True(cmpResult <= 0)
 		}
 	}
 }
@@ -179,5 +187,49 @@ func TestParseErrors(t *testing.T) {
 	for _, v := range testData {
 		_, err := semver.Parse(v)
 		a.Error(err)
+	}
+}
+
+func TestSortAndSortStr(t *testing.T) {
+	a := assert.New(t)
+
+	expectedTestData := []string{
+		"1.0.0-0.3.7",
+		"1.0.0-alpha",
+		"1.0.0-alpha.1",
+		"1.0.0-alpha.beta",
+		"1.0.0-beta",
+		"1.0.0-beta.2",
+		"1.0.0-beta.11",
+		"1.0.0-rc.1",
+		"1.0.0-x.7.z.92",
+		"1.0.0",
+		"2.0.0",
+		"11.11.11",
+		"62.99.57962",
+	}
+
+	randomizedTestData := slices.Clone(expectedTestData)
+	randomizedTestDataSemver := make([]semver.SemVer, len(randomizedTestData))
+
+	for i := range randomizedTestData {
+		j := rand.Intn(i + 1)
+		randomizedTestData[i], randomizedTestData[j] = randomizedTestData[j], randomizedTestData[i]
+	}
+	
+	for i := range randomizedTestData {
+		randomizedTestDataSemver[i] = semver.MustParse(randomizedTestData[i])
+	}
+
+	err := semver.SortStr(randomizedTestData)
+	a.NoError(err)
+
+	semver.Sort(randomizedTestDataSemver)
+	a.NoError(err)
+
+	for i, expected := range expectedTestData {
+		randSemverObj := randomizedTestDataSemver[i].String()
+		randSemverStr := randomizedTestData[i]
+		a.True(randSemverObj == randSemverStr && randSemverStr == expected, fmt.Sprint(randSemverObj," & ",randSemverStr," & ",expected, " should be equal" ))
 	}
 }

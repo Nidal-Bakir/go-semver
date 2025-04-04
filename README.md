@@ -38,7 +38,7 @@ func main() {
 
 ## 🔍 Version Comparison Rules
 
-This package follows the precedence rules defined in the Semantic Versioning 2.0.0 spec, including:
+This package follows the precedence rules defined in the Semantic Versioning 2.0.0 [spec](https://semver.org/#spec-item-11), including:
 
 * Precedence is determined by the major, minor, and patch versions, in that order.
 
