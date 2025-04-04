@@ -7,6 +7,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -101,6 +102,22 @@ func (s SemVer) IsEquql(o SemVer) bool {
 	return s.Major == o.Major && s.Minor == o.Minor && s.Patch == o.Patch && s.PreRelease == o.PreRelease
 }
 
+// Compare returns
+//
+//	-1 if this is less than other,
+//	 0 if this equals other,
+//	+1 if this is greater than other.
+func (s SemVer) Compare(other SemVer) int {
+	cmpResults := s.generateCompareToOtherResult(other)
+	for _, result := range cmpResults {
+		if result == 0 {
+			continue
+		}
+		return result
+	}
+	return 0
+}
+
 // When major, minor, and patch are equal, a pre-release version has lower precedence than a normal version:
 //
 // Example: 1.0.0-alpha < 1.0.0.
@@ -184,7 +201,7 @@ func Parse(semverStr string) (SemVer, error) {
 			continue
 		}
 
-		if c == '-' && !didEnterPreReleasePart && !didEnterBuildMetadataPart{
+		if c == '-' && !didEnterPreReleasePart && !didEnterBuildMetadataPart {
 			didEnterPreReleasePart = true
 			partIndex = 3
 			continue
@@ -224,3 +241,32 @@ func Parse(semverStr string) (SemVer, error) {
 
 	return semver, nil
 }
+
+func IsValid(v string) bool {
+	_, err := Parse(v)
+	return err == nil
+}
+
+func Compare(v1, v2 string) (int, error) {
+	parsedV1, err := Parse(v1)
+	if err != nil {
+		return 0, err
+	}
+	parsedV2, err := Parse(v2)
+	if err != nil {
+		return 0, err
+	}
+	return parsedV1.Compare(parsedV2), nil
+}
+
+// Sort sorts a list of semantic version strings using [ByVersion].
+func Sort(list SemVers) {
+	sort.Sort(list)
+}
+
+// SemVers implements [sort.Interface] for sorting semantic versions.
+type SemVers []SemVer
+
+func (vs SemVers) Len() int           { return len(vs) }
+func (vs SemVers) Swap(i, j int)      { vs[i], vs[j] = vs[j], vs[i] }
+func (vs SemVers) Less(i, j int) bool { return vs[i].IsLessOrEquql(vs[j]) }
