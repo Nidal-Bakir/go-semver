@@ -110,11 +110,14 @@ func TestParseSemVerFunction(t *testing.T) {
 		a.True(expectedSemver.IsEquql(ver))
 
 		if i+1 != len(testData) {
+
 			nextSemverStr := testData[i+1].semverStr
 			nextSemver, err := semver.Parse(nextSemverStr)
 			a.NoError(err)
 			a.True(ver.IsLessOrEquql(nextSemver), fmt.Sprint("(", ver.String(), ") should be less then of equal (", nextSemver.String(), ")"))
 			a.False(ver.IsGrater(nextSemver), fmt.Sprint("(", ver.String(), ") should be less then of equal (", nextSemver.String(), ")"))
+
+			a.True(semver.IsValid(nextSemverStr))
 
 			cmpResult, err := semver.Compare(semverStr, nextSemverStr)
 			a.NoError(err)
@@ -171,7 +174,7 @@ func TestSemverPrecedenceWithPreRelease(t *testing.T) {
 
 }
 
-func TestParseErrors(t *testing.T) {
+func TestParseErrorsAndInValid(t *testing.T) {
 	a := assert.New(t)
 
 	testData := []string{
@@ -187,6 +190,7 @@ func TestParseErrors(t *testing.T) {
 	for _, v := range testData {
 		_, err := semver.Parse(v)
 		a.Error(err)
+		a.False(semver.IsValid(v))
 	}
 }
 
@@ -216,7 +220,7 @@ func TestSortAndSortStr(t *testing.T) {
 		j := rand.Intn(i + 1)
 		randomizedTestData[i], randomizedTestData[j] = randomizedTestData[j], randomizedTestData[i]
 	}
-	
+
 	for i := range randomizedTestData {
 		randomizedTestDataSemver[i] = semver.MustParse(randomizedTestData[i])
 	}
@@ -230,6 +234,6 @@ func TestSortAndSortStr(t *testing.T) {
 	for i, expected := range expectedTestData {
 		randSemverObj := randomizedTestDataSemver[i].String()
 		randSemverStr := randomizedTestData[i]
-		a.True(randSemverObj == randSemverStr && randSemverStr == expected, fmt.Sprint(randSemverObj," & ",randSemverStr," & ",expected, " should be equal" ))
+		a.True(randSemverObj == randSemverStr && randSemverStr == expected, fmt.Sprint(randSemverObj, " & ", randSemverStr, " & ", expected, " should be equal"))
 	}
 }
